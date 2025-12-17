@@ -6,7 +6,7 @@ export const getClients = async (orgId: string): Promise<Client[]> => {
     .from('bookings')
     .select(`
       user_id,
-      profile:profiles(id, email, phone, created_at)
+      profile:profiles!bookings_user_id_fkey(id, email, phone, created_at)
     `)
     .eq('org_id', orgId);
 
