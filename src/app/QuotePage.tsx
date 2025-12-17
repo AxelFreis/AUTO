@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { Camera, Upload } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Camera, Upload, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { LoadingBar } from '../components/ui/LoadingBar';
 import { PriceTag } from '../components/ui/PriceTag';
 import { routes } from '../config/routes';
+import { uploadMultiplePhotos, type UploadedFile } from '../services/storage';
 
 type AnalysisStep = 'upload' | 'analyzing' | 'result';
 
@@ -13,18 +14,58 @@ export const QuotePage = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<AnalysisStep>('upload');
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadedPhotos, setUploadedPhotos] = useState<UploadedFile[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePhotoUpload = () => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      setSelectedFiles(prev => [...prev, ...fileArray]);
+      setUploadError(null);
+    }
+  };
+
+  const handleGalleryClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handlePhotoUpload = async () => {
+    if (selectedFiles.length === 0) {
+      setUploadError('Veuillez sélectionner au moins une photo');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
     setStep('analyzing');
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setAnalysisProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => setStep('result'), 500);
-      }
-    }, 300);
+
+    try {
+      const uploaded = await uploadMultiplePhotos(selectedFiles);
+      setUploadedPhotos(uploaded);
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        setAnalysisProgress(progress);
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setStep('result'), 500);
+        }
+      }, 300);
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Erreur lors de l\'upload');
+      setStep('upload');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -51,18 +92,57 @@ export const QuotePage = () => {
                   Prenez plusieurs photos de votre véhicule pour une meilleure estimation
                 </p>
               </div>
-              <Button
-                variant="primary"
-                onClick={handlePhotoUpload}
-                className="mt-4"
-              >
-                <Camera className="w-5 h-5 mr-2" />
-                Prendre une photo
-              </Button>
-              <Button variant="ghost" className="text-sm">
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+
+              <Button variant="ghost" className="text-sm" onClick={handleGalleryClick}>
                 <Upload className="w-4 h-4 mr-2" />
                 Ou sélectionner depuis la galerie
               </Button>
+
+              {uploadError && (
+                <p className="text-sm text-red-500">{uploadError}</p>
+              )}
+
+              {selectedFiles.length > 0 && (
+                <div className="w-full space-y-3">
+                  <p className="text-sm text-text-secondary text-center">
+                    {selectedFiles.length} photo{selectedFiles.length > 1 ? 's' : ''} sélectionnée{selectedFiles.length > 1 ? 's' : ''}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg"
+                        />
+                        <button
+                          onClick={() => removeFile(index)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    variant="primary"
+                    onClick={handlePhotoUpload}
+                    fullWidth
+                    disabled={isUploading}
+                  >
+                    {isUploading ? 'Upload en cours...' : 'Analyser les photos'}
+                  </Button>
+                </div>
+              )}
             </div>
           </Card>
         </>
