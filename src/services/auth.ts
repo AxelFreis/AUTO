@@ -36,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         const user: User = {
           id: data.user.id,
           email: data.user.email!,
+          full_name: data.user.user_metadata?.full_name,
           role: 'client',
           created_at: data.user.created_at,
         };
@@ -67,6 +68,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         const user: User = {
           id: data.user.id,
           email: data.user.email!,
+          full_name: data.user.user_metadata?.full_name,
           role: 'client',
           created_at: data.user.created_at,
         };
@@ -92,6 +94,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         const user: User = {
           id: session.user.id,
           email: session.user.email!,
+          full_name: session.user.user_metadata?.full_name,
           role: 'client',
           created_at: session.user.created_at,
         };

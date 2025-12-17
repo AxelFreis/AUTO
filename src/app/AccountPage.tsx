@@ -32,8 +32,8 @@ export const AccountPage = () => {
             <User className="w-8 h-8 text-primary" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-text-primary">Lucas Dubois</h3>
-            <p className="text-sm text-text-secondary">{user?.email || 'lucas@example.com'}</p>
+            <h3 className="font-semibold text-text-primary">{user?.full_name || 'Utilisateur'}</h3>
+            <p className="text-sm text-text-secondary">{user?.email || 'email@example.com'}</p>
           </div>
         </div>
       </Card>
