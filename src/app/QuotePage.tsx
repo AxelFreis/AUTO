@@ -19,6 +19,7 @@ export const QuotePage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -31,6 +32,10 @@ export const QuotePage = () => {
 
   const handleGalleryClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleCameraClick = () => {
+    cameraInputRef.current?.click();
   };
 
   const removeFile = (index: number) => {
@@ -87,11 +92,20 @@ export const QuotePage = () => {
                 <Camera className="w-12 h-12 text-slate-500" />
               </div>
               <div className="text-center space-y-2">
-                <p className="text-text-primary font-medium">Prendre une photo maintenant</p>
                 <p className="text-sm text-text-secondary max-w-xs">
                   Prenez plusieurs photos de votre véhicule pour une meilleure estimation
                 </p>
               </div>
+
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
 
               <input
                 ref={fileInputRef}
@@ -101,6 +115,15 @@ export const QuotePage = () => {
                 onChange={handleFileSelect}
                 className="hidden"
               />
+
+              <Button
+                variant="primary"
+                onClick={handleCameraClick}
+                className="mt-4"
+              >
+                <Camera className="w-5 h-5 mr-2" />
+                Prendre une photo maintenant
+              </Button>
 
               <Button variant="ghost" className="text-sm" onClick={handleGalleryClick}>
                 <Upload className="w-4 h-4 mr-2" />
