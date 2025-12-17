@@ -7,7 +7,6 @@ import { Stepper } from '../components/ui/Stepper';
 import { routes } from '../config/routes';
 
 interface Address {
-  streetNumber: string;
   street: string;
   city: string;
   postalCode: string;
@@ -22,7 +21,6 @@ export const BookingPage = () => {
   const [locationType, setLocationType] = useState<'home' | 'work' | null>(null);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [address, setAddress] = useState<Address>({
-    streetNumber: '',
     street: '',
     city: '',
     postalCode: '',
@@ -71,13 +69,13 @@ export const BookingPage = () => {
   };
 
   const formatAddress = () => {
-    if (!address.streetNumber && !address.street && !address.city && !address.postalCode) {
+    if (!address.street && !address.city && !address.postalCode) {
       return '';
     }
-    return `${address.streetNumber} ${address.street}, ${address.postalCode} ${address.city}`.trim();
+    return `${address.street}, ${address.postalCode} ${address.city}`.trim();
   };
 
-  const isAddressComplete = address.streetNumber && address.street && address.city && address.postalCode;
+  const isAddressComplete = address.street && address.city && address.postalCode;
 
   return (
     <div className="p-4 space-y-6">
@@ -239,19 +237,20 @@ export const BookingPage = () => {
             <div className="mt-4 p-4 bg-slate-900 rounded-lg space-y-4">
               <p className="text-sm text-text-secondary font-medium">Adresse</p>
 
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">
+                  Rue
+                </label>
+                <input
+                  type="text"
+                  value={address.street}
+                  onChange={(e) => handleAddressChange('street', e.target.value)}
+                  placeholder="15 Rue de Rivoli"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-text-secondary mb-1">
-                    Numéro
-                  </label>
-                  <input
-                    type="text"
-                    value={address.streetNumber}
-                    onChange={(e) => handleAddressChange('streetNumber', e.target.value)}
-                    placeholder="15"
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
                 <div>
                   <label className="block text-xs text-text-secondary mb-1">
                     Code postal
@@ -264,32 +263,18 @@ export const BookingPage = () => {
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs text-text-secondary mb-1">
-                  Rue
-                </label>
-                <input
-                  type="text"
-                  value={address.street}
-                  onChange={(e) => handleAddressChange('street', e.target.value)}
-                  placeholder="Rue de Rivoli"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-text-secondary mb-1">
-                  Ville
-                </label>
-                <input
-                  type="text"
-                  value={address.city}
-                  onChange={(e) => handleAddressChange('city', e.target.value)}
-                  placeholder="Paris"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+                <div>
+                  <label className="block text-xs text-text-secondary mb-1">
+                    Ville
+                  </label>
+                  <input
+                    type="text"
+                    value={address.city}
+                    onChange={(e) => handleAddressChange('city', e.target.value)}
+                    placeholder="Paris"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
               </div>
 
               <Button
