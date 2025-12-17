@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, CheckCircle, XCircle, AlertCircle, User } from 'lucide-react';
 import { Card } from '../../../components/ui/Card';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { Button } from '../../../components/ui/Button';
@@ -129,19 +129,53 @@ export const PlanningPage = () => {
                           {getStatusLabel(booking.status)}
                         </p>
                       </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-text-primary">
+                          {booking.estimated_price}€
+                        </p>
+                        {booking.service?.duration && (
+                          <p className="text-xs text-text-muted">
+                            {booking.service.duration} min
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
+                      {booking.profile && (
+                        <div className="flex items-center gap-2 text-sm text-text-secondary">
+                          <User className="w-4 h-4" />
+                          <span>
+                            {booking.profile.full_name || booking.profile.email}
+                            {booking.profile.phone && ` • ${booking.profile.phone}`}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 text-sm text-text-secondary">
                         <Clock className="w-4 h-4" />
                         <span>
-                          {new Date(booking.date).toLocaleDateString('fr-FR')} à {booking.time}
+                          {new Date(booking.date).toLocaleDateString('fr-FR', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })} à {booking.time.slice(0, 5)}
                         </span>
                       </div>
                       {booking.address && (
                         <div className="flex items-start gap-2 text-sm text-text-secondary">
                           <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                          <span>{booking.address}</span>
+                          <div>
+                            <span>{booking.address}</span>
+                            <span className="ml-2 text-xs bg-slate-800 px-2 py-0.5 rounded">
+                              {booking.location_type === 'home' ? 'Domicile' : 'Travail'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {booking.photos && booking.photos.length > 0 && (
+                        <div className="text-sm text-text-secondary">
+                          {booking.photos.length} photo{booking.photos.length > 1 ? 's' : ''} du véhicule
                         </div>
                       )}
                     </div>
@@ -217,16 +251,32 @@ export const PlanningPage = () => {
             <div className="space-y-2">
               {completedBookings.slice(0, 5).map((booking) => (
                 <Card key={booking.id} className="bg-slate-900/50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm text-text-primary font-medium">
-                        {booking.service?.name || 'Prestation'}
-                      </p>
-                      <p className="text-xs text-text-secondary">
-                        {new Date(booking.date).toLocaleDateString('fr-FR')}
-                      </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-text-primary font-medium">
+                          {booking.service?.name || 'Prestation'}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-text-secondary mt-1">
+                          <Clock className="w-3 h-3" />
+                          <span>
+                            {new Date(booking.date).toLocaleDateString('fr-FR')} à {booking.time.slice(0, 5)}
+                          </span>
+                        </div>
+                        {booking.address && (
+                          <div className="flex items-start gap-1 text-xs text-text-muted mt-1">
+                            <MapPin className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                            <span className="line-clamp-1">{booking.address}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <CheckCircle className="w-5 h-5 text-success" />
+                        <span className="text-xs font-medium text-text-primary">
+                          {booking.final_price || booking.estimated_price}€
+                        </span>
+                      </div>
                     </div>
-                    <CheckCircle className="w-5 h-5 text-success" />
                   </div>
                 </Card>
               ))}

@@ -7,7 +7,7 @@ export const getBookings = async (orgId: string): Promise<Booking[]> => {
     .select(`
       *,
       service:services(*),
-      user:user_id(id, email)
+      profile:profiles(id, email, full_name, phone)
     `)
     .eq('org_id', orgId)
     .order('date', { ascending: false })

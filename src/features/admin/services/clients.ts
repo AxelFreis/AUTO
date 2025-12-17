@@ -2,38 +2,39 @@ import { supabase } from '../../../services/supabase';
 import { Client } from '../models/types';
 
 export const getClients = async (orgId: string): Promise<Client[]> => {
-  const { data: bookings, error } = await supabase
+  const { data, error } = await supabase
     .from('bookings')
-    .select('user_id')
+    .select(`
+      user_id,
+      profile:profiles(id, email, phone, created_at)
+    `)
     .eq('org_id', orgId);
 
   if (error) throw error;
 
-  const uniqueUserIds = [...new Set(bookings?.map((b) => b.user_id) || [])];
+  const clientsMap = new Map<string, Client>();
 
-  if (uniqueUserIds.length === 0) return [];
+  data?.forEach((booking: any) => {
+    if (booking.profile && !clientsMap.has(booking.user_id)) {
+      clientsMap.set(booking.user_id, {
+        id: booking.profile.id,
+        email: booking.profile.email,
+        phone: booking.profile.phone,
+        created_at: booking.profile.created_at,
+        bookings_count: 0,
+      });
+    }
+  });
 
-  const clientsData: Client[] = [];
-
-  for (const userId of uniqueUserIds) {
-    const { data: userData } = await supabase.auth.admin.getUserById(userId);
-
+  for (const [userId, client] of clientsMap) {
     const { count } = await supabase
       .from('bookings')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('org_id', orgId);
 
-    if (userData?.user) {
-      clientsData.push({
-        id: userData.user.id,
-        email: userData.user.email || '',
-        phone: userData.user.user_metadata?.phone,
-        created_at: userData.user.created_at,
-        bookings_count: count || 0,
-      });
-    }
+    client.bookings_count = count || 0;
   }
 
-  return clientsData;
+  return Array.from(clientsMap.values());
 };

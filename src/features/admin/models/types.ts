@@ -33,9 +33,11 @@ export interface Booking {
   google_event_id?: string;
   created_at: string;
   service?: Service;
-  user?: {
+  profile?: {
     id: string;
     email: string;
+    full_name?: string;
+    phone?: string;
   };
 }
 
