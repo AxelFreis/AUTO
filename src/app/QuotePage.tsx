@@ -7,11 +7,13 @@ import { LoadingBar } from '../components/ui/LoadingBar';
 import { PriceTag } from '../components/ui/PriceTag';
 import { routes } from '../config/routes';
 import { uploadMultiplePhotos, type UploadedFile } from '../services/storage';
+import { useBookingStore } from '../services/booking';
 
 type AnalysisStep = 'upload' | 'analyzing' | 'result';
 
 export const QuotePage = () => {
   const navigate = useNavigate();
+  const { setPhotos, setService } = useBookingStore();
   const [step, setStep] = useState<AnalysisStep>('upload');
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -55,6 +57,8 @@ export const QuotePage = () => {
     try {
       const uploaded = await uploadMultiplePhotos(selectedFiles);
       setUploadedPhotos(uploaded);
+      setPhotos(uploaded);
+      setService('interior', 65, 60);
 
       let progress = 0;
       const interval = setInterval(() => {

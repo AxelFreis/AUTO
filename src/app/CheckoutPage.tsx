@@ -1,12 +1,54 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { PriceTag } from '../components/ui/PriceTag';
 import { routes } from '../config/routes';
+import { useBookingStore, createBooking } from '../services/booking';
+import { useAuthStore } from '../services/auth';
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { date, time, locationType, address, estimatedPrice, estimatedDuration, serviceType, reset } = useBookingStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const formattedDate = date ? new Date(date).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }) : '';
+
+  const formattedAddress = `${address.street}, ${address.postalCode} ${address.city}`;
+
+  const serviceNames = {
+    interior: 'Nettoyage intérieur',
+    exterior: 'Nettoyage extérieur',
+    complete: 'Nettoyage complet',
+    polishing: 'Polissage'
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!user?.id) {
+      navigate(routes.login);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await createBooking(user.id);
+      reset();
+      navigate(routes.success);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la création de la réservation');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -25,10 +67,10 @@ export const CheckoutPage = () => {
         <div className="space-y-3">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-text-primary font-medium">Nettoyage intérieur</p>
-              <p className="text-sm text-text-secondary">45-60 min</p>
+              <p className="text-text-primary font-medium">{serviceNames[serviceType]}</p>
+              <p className="text-sm text-text-secondary">{estimatedDuration} min</p>
             </div>
-            <PriceTag amount={65} size="sm" />
+            <PriceTag amount={estimatedPrice} size="sm" />
           </div>
 
           <div className="h-px bg-slate-700" />
@@ -36,15 +78,15 @@ export const CheckoutPage = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-text-secondary">Date</span>
-              <span className="text-text-primary">30 avril 2026 à 11h</span>
+              <span className="text-text-primary">{formattedDate} à {time}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-text-secondary">Lieu</span>
-              <span className="text-text-primary">1 Rue Jeanne d'Arc</span>
+              <span className="text-text-primary">{formattedAddress}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-text-secondary">Prestation</span>
-              <span className="text-text-primary">Nettoyage intérieur</span>
+              <span className="text-text-primary">{serviceNames[serviceType]}</span>
             </div>
           </div>
 
@@ -52,10 +94,16 @@ export const CheckoutPage = () => {
 
           <div className="flex items-center justify-between pt-2">
             <span className="font-semibold text-text-primary">Prix</span>
-            <PriceTag amount={65} size="md" />
+            <PriceTag amount={estimatedPrice} size="md" />
           </div>
         </div>
       </Card>
+
+      {error && (
+        <Card className="bg-red-500/10 border border-red-500/20">
+          <p className="text-sm text-red-500">{error}</p>
+        </Card>
+      )}
 
       <Card className="bg-slate-900 border border-slate-700">
         <div className="flex items-start gap-3">
@@ -76,9 +124,10 @@ export const CheckoutPage = () => {
       <Button
         variant="primary"
         fullWidth
-        onClick={() => navigate(routes.success)}
+        onClick={handleConfirmBooking}
+        disabled={isLoading}
       >
-        Confirmer ma réservation
+        {isLoading ? 'Création en cours...' : 'Confirmer ma réservation'}
       </Button>
     </div>
   );

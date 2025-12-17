@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Home as HomeIcon, Briefcase, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Stepper } from '../components/ui/Stepper';
 import { routes } from '../config/routes';
+import { useBookingStore } from '../services/booking';
 
 interface Address {
   street: string;
@@ -14,6 +15,7 @@ interface Address {
 
 export const BookingPage = () => {
   const navigate = useNavigate();
+  const { setDateTime, setLocation, date: storedDate, time: storedTime, locationType: storedLocationType, address: storedAddress } = useBookingStore();
   const [selectedDate, setSelectedDate] = useState('30 avril 2026');
   const [selectedTime, setSelectedTime] = useState('11:00');
   const [isEditingDate, setIsEditingDate] = useState(false);
@@ -25,6 +27,18 @@ export const BookingPage = () => {
     city: '',
     postalCode: '',
   });
+
+  useEffect(() => {
+    if (storedDate) {
+      const date = new Date(storedDate);
+      const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+      const formattedDate = date.toLocaleDateString('fr-FR', options);
+      setSelectedDate(formattedDate);
+    }
+    if (storedTime) setSelectedTime(storedTime);
+    if (storedLocationType) setLocationType(storedLocationType);
+    if (storedAddress.street) setAddress(storedAddress);
+  }, []);
 
   const steps = [
     { label: 'Date', completed: false },
@@ -76,6 +90,14 @@ export const BookingPage = () => {
   };
 
   const isAddressComplete = address.street && address.city && address.postalCode;
+
+  const handleContinue = () => {
+    if (locationType && isAddressComplete && !isEditingAddress) {
+      setDateTime(tempDate || new Date().toISOString().split('T')[0], selectedTime);
+      setLocation(locationType, address);
+      navigate(routes.checkout);
+    }
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -293,7 +315,7 @@ export const BookingPage = () => {
       <Button
         variant="primary"
         fullWidth
-        onClick={() => navigate(routes.checkout)}
+        onClick={handleContinue}
         disabled={!locationType || !isAddressComplete || isEditingAddress}
       >
         Continuer
