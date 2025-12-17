@@ -7,8 +7,15 @@ import { BookingPage } from './app/BookingPage';
 import { CheckoutPage } from './app/CheckoutPage';
 import { SuccessPage } from './app/SuccessPage';
 import { AccountPage } from './app/AccountPage';
-import { AdminPage } from './app/AdminPage';
 import { routes } from './config/routes';
+import { LoginAdminPage } from './features/admin/pages/LoginAdminPage';
+import { AdminLayout } from './features/admin/components/AdminLayout';
+import { DashboardPage } from './features/admin/pages/DashboardPage';
+import { PrestationsListPage } from './features/admin/pages/PrestationsListPage';
+import { PrestationFormPage } from './features/admin/pages/PrestationFormPage';
+import { ClientsPage } from './features/admin/pages/ClientsPage';
+import { PlanningPage } from './features/admin/pages/PlanningPage';
+import { FacturationPage } from './features/admin/pages/FacturationPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,8 +49,29 @@ function App() {
           <Route element={<AppLayout headerTitle="Mon compte" />}>
             <Route path={routes.account} element={<AccountPage />} />
           </Route>
-          <Route element={<AppLayout headerTitle="Administration" showNotifications />}>
-            <Route path={routes.admin} element={<AdminPage />} />
+
+          <Route path="/login-admin" element={<LoginAdminPage />} />
+
+          <Route element={<AdminLayout title="Dashboard" />}>
+            <Route path="/admin" element={<DashboardPage />} />
+          </Route>
+          <Route element={<AdminLayout title="Prestations" />}>
+            <Route path="/admin/prestations" element={<PrestationsListPage />} />
+          </Route>
+          <Route element={<AdminLayout title="Nouvelle prestation" />}>
+            <Route path="/admin/prestations/new" element={<PrestationFormPage />} />
+          </Route>
+          <Route element={<AdminLayout title="Modifier prestation" />}>
+            <Route path="/admin/prestations/:id" element={<PrestationFormPage />} />
+          </Route>
+          <Route element={<AdminLayout title="Clients" />}>
+            <Route path="/admin/clients" element={<ClientsPage />} />
+          </Route>
+          <Route element={<AdminLayout title="Planning" />}>
+            <Route path="/admin/planning" element={<PlanningPage />} />
+          </Route>
+          <Route element={<AdminLayout title="Facturation" />}>
+            <Route path="/admin/facturation" element={<FacturationPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
