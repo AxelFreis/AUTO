@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import { supabase } from './supabase';
 import type { UploadedFile } from './storage';
 
@@ -39,32 +38,25 @@ const initialState = {
   },
 };
 
-export const useBookingStore = create<BookingState>()(
-  persist(
-    (set) => ({
-      ...initialState,
+export const useBookingStore = create<BookingState>((set) => ({
+  ...initialState,
 
-      setPhotos: (photos) => set({ photos }),
+  setPhotos: (photos) => set({ photos }),
 
-      setService: (type, price, duration) =>
-        set({
-          serviceType: type,
-          estimatedPrice: price,
-          estimatedDuration: duration
-        }),
-
-      setDateTime: (date, time) => set({ date, time }),
-
-      setLocation: (type, address) =>
-        set({ locationType: type, address }),
-
-      reset: () => set(initialState),
+  setService: (type, price, duration) =>
+    set({
+      serviceType: type,
+      estimatedPrice: price,
+      estimatedDuration: duration
     }),
-    {
-      name: 'booking-storage',
-    }
-  )
-);
+
+  setDateTime: (date, time) => set({ date, time }),
+
+  setLocation: (type, address) =>
+    set({ locationType: type, address }),
+
+  reset: () => set(initialState),
+}));
 
 export const createBooking = async (userId: string) => {
   const state = useBookingStore.getState();
@@ -118,4 +110,47 @@ export const createBooking = async (userId: string) => {
   }
 
   return data;
+};
+
+export interface UserBooking {
+  id: string;
+  date: string;
+  time: string;
+  address: string;
+  location_type: 'home' | 'work';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  estimated_price: number;
+  photos: string[];
+  created_at: string;
+  service: {
+    id: string;
+    name: string;
+    type: string;
+  } | null;
+}
+
+export const getUserBookings = async (userId: string): Promise<UserBooking[]> => {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select(`
+      id,
+      date,
+      time,
+      address,
+      location_type,
+      status,
+      estimated_price,
+      photos,
+      created_at,
+      service:services(id, name, type)
+    `)
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .order('time', { ascending: false });
+
+  if (error) {
+    throw new Error(`Erreur lors de la récupération des réservations: ${error.message}`);
+  }
+
+  return data || [];
 };

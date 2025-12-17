@@ -1,18 +1,64 @@
-import { User, Calendar, FileText, CreditCard, Settings, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Calendar, FileText, CreditCard, Settings, LogOut, MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
+import { PriceTag } from '../components/ui/PriceTag';
 import { useAuthStore } from '../services/auth';
+import { getUserBookings, type UserBooking } from '../services/booking';
 import { routes } from '../config/routes';
 
 export const AccountPage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const [bookings, setBookings] = useState<UserBooking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadBookings = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getUserBookings(user.id);
+        setBookings(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur lors du chargement des réservations');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBookings();
+  }, [user?.id]);
 
   const handleLogout = async () => {
     await logout();
     navigate(routes.login);
+  };
+
+  const getStatusLabel = (status: UserBooking['status']) => {
+    const labels = {
+      pending: 'En attente',
+      confirmed: 'Confirmée',
+      completed: 'Terminée',
+      cancelled: 'Annulée',
+    };
+    return labels[status];
+  };
+
+  const getStatusColor = (status: UserBooking['status']) => {
+    const colors = {
+      pending: 'bg-yellow-500/20 text-yellow-500',
+      confirmed: 'bg-blue-500/20 text-blue-500',
+      completed: 'bg-green-500/20 text-green-500',
+      cancelled: 'bg-red-500/20 text-red-500',
+    };
+    return colors[status];
   };
 
   return (
@@ -82,18 +128,100 @@ export const AccountPage = () => {
         </Card>
       </div>
 
-      <Card>
-        <EmptyState
-          icon={Calendar}
-          title="Aucune réservation en cours"
-          description="Réservez votre premier nettoyage pour commencer"
-          action={
-            <Button variant="primary" size="sm" onClick={() => navigate(routes.quote)}>
-              Réserver maintenant
-            </Button>
-          }
-        />
-      </Card>
+      <div className="space-y-3">
+        <h3 className="text-lg font-semibold text-text-primary">Mes réservations</h3>
+
+        {isLoading ? (
+          <Card>
+            <p className="text-center text-text-secondary">Chargement...</p>
+          </Card>
+        ) : error ? (
+          <Card className="bg-red-500/10 border border-red-500/20">
+            <p className="text-sm text-red-500">{error}</p>
+          </Card>
+        ) : bookings.length === 0 ? (
+          <Card>
+            <EmptyState
+              icon={Calendar}
+              title="Aucune réservation en cours"
+              description="Réservez votre premier nettoyage pour commencer"
+              action={
+                <Button variant="primary" size="sm" onClick={() => navigate(routes.quote)}>
+                  Réserver maintenant
+                </Button>
+              }
+            />
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {bookings.map((booking) => (
+              <Card key={booking.id} className="hover:bg-background-elevated transition-colors">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-text-primary">
+                        {booking.service?.name || 'Nettoyage'}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                            booking.status
+                          )}`}
+                        >
+                          {getStatusLabel(booking.status)}
+                        </span>
+                      </div>
+                    </div>
+                    <PriceTag amount={booking.estimated_price} size="sm" />
+                  </div>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-text-secondary">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        {new Date(booking.date).toLocaleDateString('fr-FR', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-text-secondary">
+                      <Clock className="w-4 h-4" />
+                      <span>{booking.time}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-text-secondary">
+                      <MapPin className="w-4 h-4" />
+                      <span className="flex-1">{booking.address}</span>
+                    </div>
+                  </div>
+
+                  {booking.photos && booking.photos.length > 0 && (
+                    <div className="flex gap-2 pt-2">
+                      {booking.photos.slice(0, 3).map((photo, idx) => (
+                        <img
+                          key={idx}
+                          src={photo}
+                          alt={`Photo ${idx + 1}`}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                      ))}
+                      {booking.photos.length > 3 && (
+                        <div className="w-16 h-16 bg-slate-800 rounded-lg flex items-center justify-center">
+                          <span className="text-xs text-text-secondary">
+                            +{booking.photos.length - 3}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       <Button
         variant="danger"
