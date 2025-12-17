@@ -88,7 +88,7 @@ export const AccountPage = () => {
           title="Aucune réservation en cours"
           description="Réservez votre premier nettoyage pour commencer"
           action={
-            <Button variant="primary" size="sm">
+            <Button variant="primary" size="sm" onClick={() => navigate(routes.quote)}>
               Réserver maintenant
             </Button>
           }
