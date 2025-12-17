@@ -1,16 +1,30 @@
 import { useState } from 'react';
-import { Calendar, MapPin, Home as HomeIcon, Briefcase } from 'lucide-react';
+import { Calendar, MapPin, Home as HomeIcon, Briefcase, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Stepper } from '../components/ui/Stepper';
 import { routes } from '../config/routes';
 
+interface Address {
+  streetNumber: string;
+  street: string;
+  city: string;
+  postalCode: string;
+}
+
 export const BookingPage = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState('30 avril 2026');
   const [selectedTime, setSelectedTime] = useState('11:00');
-  const [locationType, setLocationType] = useState<'home' | 'work'>('home');
+  const [locationType, setLocationType] = useState<'home' | 'work' | null>(null);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [address, setAddress] = useState<Address>({
+    streetNumber: '',
+    street: '',
+    city: '',
+    postalCode: '',
+  });
 
   const steps = [
     { label: 'Date', completed: false },
@@ -19,6 +33,28 @@ export const BookingPage = () => {
   ];
 
   const timeSlots = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
+
+  const handleLocationTypeSelect = (type: 'home' | 'work') => {
+    setLocationType(type);
+    setIsEditingAddress(true);
+  };
+
+  const handleAddressChange = (field: keyof Address, value: string) => {
+    setAddress(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveAddress = () => {
+    setIsEditingAddress(false);
+  };
+
+  const formatAddress = () => {
+    if (!address.streetNumber && !address.street && !address.city && !address.postalCode) {
+      return '';
+    }
+    return `${address.streetNumber} ${address.street}, ${address.postalCode} ${address.city}`.trim();
+  };
+
+  const isAddressComplete = address.streetNumber && address.street && address.city && address.postalCode;
 
   return (
     <div className="p-4 space-y-6">
@@ -76,7 +112,7 @@ export const BookingPage = () => {
 
           <div className="space-y-2">
             <button
-              onClick={() => setLocationType('home')}
+              onClick={() => handleLocationTypeSelect('home')}
               className={`w-full p-4 rounded-lg border-2 transition-colors ${
                 locationType === 'home'
                   ? 'border-primary bg-primary/5'
@@ -99,7 +135,7 @@ export const BookingPage = () => {
             </button>
 
             <button
-              onClick={() => setLocationType('work')}
+              onClick={() => handleLocationTypeSelect('work')}
               className={`w-full p-4 rounded-lg border-2 transition-colors ${
                 locationType === 'work'
                   ? 'border-primary bg-primary/5'
@@ -122,10 +158,88 @@ export const BookingPage = () => {
             </button>
           </div>
 
-          {locationType === 'home' && (
+          {locationType && !isEditingAddress && formatAddress() && (
             <div className="mt-4 p-3 bg-slate-900 rounded-lg">
-              <p className="text-sm text-text-secondary">Adresse</p>
-              <p className="text-text-primary font-medium">1 Rue Jeanne d'Arc</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-text-secondary">Adresse</p>
+                  <p className="text-text-primary font-medium">{formatAddress()}</p>
+                </div>
+                <button
+                  onClick={() => setIsEditingAddress(true)}
+                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <Edit className="w-4 h-4 text-text-secondary" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {locationType && isEditingAddress && (
+            <div className="mt-4 p-4 bg-slate-900 rounded-lg space-y-4">
+              <p className="text-sm text-text-secondary font-medium">Adresse</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-text-secondary mb-1">
+                    Numéro
+                  </label>
+                  <input
+                    type="text"
+                    value={address.streetNumber}
+                    onChange={(e) => handleAddressChange('streetNumber', e.target.value)}
+                    placeholder="15"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-text-secondary mb-1">
+                    Code postal
+                  </label>
+                  <input
+                    type="text"
+                    value={address.postalCode}
+                    onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                    placeholder="75001"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">
+                  Rue
+                </label>
+                <input
+                  type="text"
+                  value={address.street}
+                  onChange={(e) => handleAddressChange('street', e.target.value)}
+                  placeholder="Rue de Rivoli"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">
+                  Ville
+                </label>
+                <input
+                  type="text"
+                  value={address.city}
+                  onChange={(e) => handleAddressChange('city', e.target.value)}
+                  placeholder="Paris"
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              <Button
+                variant="primary"
+                fullWidth
+                onClick={handleSaveAddress}
+                disabled={!isAddressComplete}
+              >
+                Enregistrer l'adresse
+              </Button>
             </div>
           )}
         </div>
@@ -135,6 +249,7 @@ export const BookingPage = () => {
         variant="primary"
         fullWidth
         onClick={() => navigate(routes.checkout)}
+        disabled={!locationType || !isAddressComplete || isEditingAddress}
       >
         Continuer
       </Button>
