@@ -72,18 +72,26 @@ export const createBooking = async (userId: string) => {
   const orgId = import.meta.env.VITE_ORG_ID;
 
   if (!orgId) {
-    throw new Error('Organization ID not configured');
+    throw new Error('Configuration manquante : Organization ID');
   }
 
-  const { data: services } = await supabase
+  if (!state.date || !state.time || !state.locationType) {
+    throw new Error('Informations de réservation incomplètes');
+  }
+
+  const { data: services, error: serviceError } = await supabase
     .from('services')
     .select('id')
     .eq('type', state.serviceType)
     .eq('org_id', orgId)
     .maybeSingle();
 
+  if (serviceError) {
+    throw new Error(`Erreur lors de la récupération du service: ${serviceError.message}`);
+  }
+
   if (!services) {
-    throw new Error('Service not found');
+    throw new Error('Service non trouvé pour ce type de prestation');
   }
 
   const formattedAddress = `${state.address.street}, ${state.address.postalCode} ${state.address.city}`;
@@ -105,7 +113,9 @@ export const createBooking = async (userId: string) => {
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    throw new Error(`Erreur lors de la création de la réservation: ${error.message}`);
+  }
 
   return data;
 };

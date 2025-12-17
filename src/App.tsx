@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppLayout } from './components/layout';
@@ -18,6 +19,8 @@ import { PrestationFormPage } from './features/admin/pages/PrestationFormPage';
 import { ClientsPage } from './features/admin/pages/ClientsPage';
 import { PlanningPage } from './features/admin/pages/PlanningPage';
 import { FacturationPage } from './features/admin/pages/FacturationPage';
+import { useAuthStore } from './services/auth';
+import { supabase } from './services/supabase';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +32,28 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  const { setUser } = useAuthStore();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          full_name: session.user.user_metadata?.full_name,
+          role: 'client',
+          created_at: session.user.created_at,
+        });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [setUser]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
