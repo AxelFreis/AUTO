@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppLayout } from './components/layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { HomePage } from './app/HomePage';
+import { LoginPage } from './app/LoginPage';
 import { QuotePage } from './app/QuotePage';
 import { BookingPage } from './app/BookingPage';
 import { CheckoutPage } from './app/CheckoutPage';
@@ -31,23 +33,67 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          <Route path={routes.login} element={<LoginPage />} />
+
           <Route element={<AppLayout showHeader={false} />}>
-            <Route path={routes.home} element={<HomePage />} />
+            <Route
+              path={routes.home}
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
           <Route element={<AppLayout headerTitle="Devis instantané" />}>
-            <Route path={routes.quote} element={<QuotePage />} />
+            <Route
+              path={routes.quote}
+              element={
+                <ProtectedRoute>
+                  <QuotePage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
           <Route element={<AppLayout headerTitle="Réservation" />}>
-            <Route path={routes.booking} element={<BookingPage />} />
+            <Route
+              path={routes.booking}
+              element={
+                <ProtectedRoute>
+                  <BookingPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
           <Route element={<AppLayout headerTitle="Confirmation" />}>
-            <Route path={routes.checkout} element={<CheckoutPage />} />
+            <Route
+              path={routes.checkout}
+              element={
+                <ProtectedRoute>
+                  <CheckoutPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
           <Route element={<AppLayout showHeader={false} />}>
-            <Route path={routes.success} element={<SuccessPage />} />
+            <Route
+              path={routes.success}
+              element={
+                <ProtectedRoute>
+                  <SuccessPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
           <Route element={<AppLayout headerTitle="Mon compte" />}>
-            <Route path={routes.account} element={<AccountPage />} />
+            <Route
+              path={routes.account}
+              element={
+                <ProtectedRoute>
+                  <AccountPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
           <Route path="/login-admin" element={<LoginAdminPage />} />

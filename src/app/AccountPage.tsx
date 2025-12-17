@@ -1,11 +1,19 @@
 import { User, Calendar, FileText, CreditCard, Settings, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
 import { useAuthStore } from '../services/auth';
+import { routes } from '../config/routes';
 
 export const AccountPage = () => {
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate(routes.login);
+  };
 
   return (
     <div className="p-4 space-y-6">
@@ -90,7 +98,7 @@ export const AccountPage = () => {
       <Button
         variant="danger"
         fullWidth
-        onClick={() => logout()}
+        onClick={handleLogout}
       >
         <LogOut className="w-5 h-5 mr-2" />
         Se déconnecter
