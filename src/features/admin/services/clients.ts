@@ -6,7 +6,7 @@ export const getClients = async (orgId: string): Promise<Client[]> => {
     .from('bookings')
     .select(`
       user_id,
-      profile:profiles!bookings_user_id_fkey(id, email, phone, created_at)
+      profile:profiles!bookings_user_id_fkey(id, email, full_name, phone, created_at)
     `)
     .eq('org_id', orgId);
 
@@ -19,6 +19,7 @@ export const getClients = async (orgId: string): Promise<Client[]> => {
       clientsMap.set(booking.user_id, {
         id: booking.profile.id,
         email: booking.profile.email,
+        full_name: booking.profile.full_name,
         phone: booking.profile.phone,
         created_at: booking.profile.created_at,
         bookings_count: 0,

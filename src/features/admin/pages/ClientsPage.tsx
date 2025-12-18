@@ -73,9 +73,17 @@ export const ClientsPage = () => {
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
+                    {client.full_name && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-4 h-4 text-text-secondary" />
+                        <p className="text-base text-text-primary font-semibold">
+                          {client.full_name}
+                        </p>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 mb-2">
                       <Mail className="w-4 h-4 text-text-secondary" />
-                      <p className="text-sm text-text-primary font-medium">
+                      <p className="text-sm text-text-primary">
                         {client.email}
                       </p>
                     </div>

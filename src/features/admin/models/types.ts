@@ -82,6 +82,7 @@ export interface AdminStats {
 export interface Client {
   id: string;
   email: string;
+  full_name?: string;
   phone?: string;
   created_at: string;
   bookings_count: number;
